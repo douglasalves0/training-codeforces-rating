@@ -5,7 +5,7 @@
   "description": "adds a training rating to all the codeforces users",
   "content_scripts": [
     {
-      "matches": ["https://codeforces.com/profile/dougalves"],
+      "matches": ["https://codeforces.com/profile/*"],
       "js": ["main.js"]
     }
   ]
