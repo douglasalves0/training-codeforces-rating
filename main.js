@@ -1,60 +1,56 @@
-function sigmoid(x){
-    return Math.exp(x) / (Math.exp(x) + 1)
-};
+function sigmoid(x) {
+  return Math.exp(x) / (Math.exp(x) + 1);
+}
 
 const HARD_PROBLEM_CONSTANT = 35;
 const RANKINGS_RATINGS = [
-    0,
-    400,
-    800,
-    1200,
-    1600,
-    2000,
-    2400,
-    2700,
-    4000
+  0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600,
 ];
 const RANKINGS_NAMES = [
-    "Sleepy",
-    "Lazy",
-    "Awake",
-    "Worker",
-    "Hard Worker",
-    "Tryhard",
-    "Insane",
-    "Psycho",
-    "WTF"
+  "Sleepy",
+  "Lazy",
+  "Awake",
+  "Worker",
+  "Hard Worker",
+  "Tryhard",
+  "Insane",
+  "Psycho",
+  "WTF",
+  "JACKSON",
 ];
 const RANKINGS_LABELS = [
-    "user-gray",
-    "user-green",
-    "user-cyan",
-    "user-blue",
-    "user-violet",
-    "user-yellow",
-    "user-red",
-    "user-legendary"
+  "user-gray",
+  "user-green",
+  "user-cyan",
+  "user-blue",
+  "user-violet",
+  "user-yellow",
+  "user-red",
+  "user-legendary",
 ];
 
-function httpGet(theUrl){
-    var xmlHttp = new XMLHttpRequest();
-    xmlHttp.open('GET', theUrl, false);
-    xmlHttp.send(null);
-    return xmlHttp.responseText;
+function httpGet(theUrl) {
+  var xmlHttp = new XMLHttpRequest();
+  xmlHttp.open("GET", theUrl, false);
+  xmlHttp.send(null);
+  return xmlHttp.responseText;
 }
 
 var currentUrl = window.location.href;
 var p = currentUrl.length - 1;
-var username = ''
+var username = "";
 
-while(currentUrl[p] != '/'){
-    username += currentUrl[p];
-    p--;
+while (currentUrl[p] != "/") {
+  username += currentUrl[p];
+  p--;
 }
 
-var username = username.split("").reverse().join("")
-var body = httpGet("https://codeforces.com/api/user.status?handle=" + username + "&from=1&count=1800")
-var body2 = httpGet("https://codeforces.com/api/user.info?handles=" + username)
+const prefixUrl = "https://codeforces.com/api";
+var username = username.split("").reverse().join("");
+var body = httpGet(
+  `${prefixUrl}/user.status?handle=` + username + "&from=1&count=1800"
+);
+var body2 = httpGet(`${prefixUrl}/user.info?handles=` + username);
 
 body = JSON.parse(body);
 body2 = JSON.parse(body2);
@@ -65,26 +61,38 @@ var lastMonth = new Date();
 lastMonth.setDate(lastMonth.getDate() - 30);
 
 var ratingAcum = 0;
+var seemProblems = new Set();
 body.result.forEach((submission) => {
-    var submissionTime = new Date(submission.creationTimeSeconds * 1000);
-    if(submissionTime < lastMonth) return;
-    if(submission.verdict != "OK") return;
-    var problemRating = submission.problem.rating;
-    if(!problemRating) problemRating = userRating;
-    ratingAcum += sigmoid(
-        (problemRating - userRating) / 100
-    ) * HARD_PROBLEM_CONSTANT;
+  var submissionTime = new Date(submission.creationTimeSeconds * 1000);
+  if (submissionTime < lastMonth) return;
+  if (submission.verdict != "OK") return;
+  const pData = submission.problem;
+  const pId = { cId: pData.contestId, pIndex: pData.index };
+  if (seemProblems.has(pId)) {
+    console.log(`already seem ${pId}`);
+    return;
+  }
+  seemProblems.add(pId);
+  var problemRating = pData.rating;
+  if (!problemRating) problemRating = userRating;
+  ratingAcum +=
+    sigmoid((problemRating - userRating) / 100) * HARD_PROBLEM_CONSTANT;
 });
 
-ratingAcum = Math.round(ratingAcum);
-
-var rankingIdx = 0
-while(RANKINGS_RATINGS[rankingIdx+1] <= ratingAcum){
-    rankingIdx++;
+var rankingIdx = 0;
+while (RANKINGS_RATINGS[rankingIdx + 1] <= ratingAcum) {
+  rankingIdx++;
 }
 
-ranking = document.querySelector(".user-rank")
-ranking.innerHTML += '/ <span class="' + RANKINGS_LABELS[rankingIdx] + '">' + RANKINGS_NAMES[rankingIdx] + '</span>'
+const uLabel = RANKINGS_LABELS[rankingIdx];
+const uNextLabel = RANKINGS_LABELS[rankingIdx + 1];
+const uRanking = RANKINGS_NAMES[rankingIdx];
+const uNextRanking = RANKINGS_NAMES[rankingIdx + 1];
+const uRating = Math.round(ratingAcum);
+const uNextRating = RANKINGS_RATINGS[rankingIdx + 1];
+
+ranking = document.querySelector(".user-rank");
+ranking.innerHTML += ` / <span class="${uLabel}">${uRanking}</span>`;
 
 info = document.querySelector(".info");
 
@@ -93,9 +101,11 @@ var li = document.createElement("li");
 var newli = `
     <img style="vertical-align:middle;margin-right:0.5em;" src="//codeforces.com/codeforces.org/s/85512/images/icons/rating-24x24.png" alt="User's training rating in Codeforces community" title="User's training rating in Codeforces community">
     Training rating (Month):
-    <span style="font-weight:bold;" class="` + RANKINGS_LABELS[rankingIdx] + `">` + ratingAcum + `</span>
-    <span class="smaller"> (+` + (RANKINGS_RATINGS[rankingIdx+1] - ratingAcum) + ` to <span style="font-weight:bold;" class="` + RANKINGS_LABELS[rankingIdx+1] + `">` + RANKINGS_NAMES[rankingIdx+1] + `</span>) </span>
+    <span style="font-weight:bold;" class="${uLabel}">${uRating}</span>
+    <span class="smaller">(+${
+      uNextRating - uRating
+    }) to <span style="font-weight:bold;" class="${uNextLabel}">${uNextRanking}</span>) </span>
 `;
+
 li.innerHTML = newli;
-console.log(newli);
 ul.insertBefore(li, ul.children[1]);
