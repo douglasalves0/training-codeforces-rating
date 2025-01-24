@@ -1,12 +1,13 @@
 {
   "manifest_version": 2,
   "name": "codeforces-training-rating",
-  "version": "1.0",
-  "description": "adds a training rating to all the codeforces users",
+  "version": "1.0.1",
+  "author": "Douglas Alves de Sousa",
+  "description": "Adds a training rating to all the codeforces users",
   "content_scripts": [
     {
       "matches": ["https://codeforces.com/profile/*"],
-      "js": ["main.js"]
+      "js": ["constants.js", "functions.js", "main.js"]
     }
   ]
 }

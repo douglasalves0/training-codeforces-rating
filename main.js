@@ -1,41 +1,3 @@
-function sigmoid(x) {
-  return Math.exp(x) / (Math.exp(x) + 1);
-}
-
-const HARD_PROBLEM_CONSTANT = 35;
-const RANKINGS_RATINGS = [
-  0, 400, 800, 1200, 1600, 2000, 2400, 2800, 3200, 3600,
-];
-const RANKINGS_NAMES = [
-  "Sleepy",
-  "Lazy",
-  "Awake",
-  "Worker",
-  "Hard Worker",
-  "Tryhard",
-  "Insane",
-  "Psycho",
-  "WTF",
-  "JACKSON",
-];
-const RANKINGS_LABELS = [
-  "user-gray",
-  "user-green",
-  "user-cyan",
-  "user-blue",
-  "user-violet",
-  "user-yellow",
-  "user-red",
-  "user-legendary",
-];
-
-function httpGet(theUrl) {
-  var xmlHttp = new XMLHttpRequest();
-  xmlHttp.open("GET", theUrl, false);
-  xmlHttp.send(null);
-  return xmlHttp.responseText;
-}
-
 var currentUrl = window.location.href;
 var p = currentUrl.length - 1;
 var username = "";
@@ -45,12 +7,11 @@ while (currentUrl[p] != "/") {
   p--;
 }
 
-const prefixUrl = "https://codeforces.com/api";
 var username = username.split("").reverse().join("");
 var body = httpGet(
-  `${prefixUrl}/user.status?handle=` + username + "&from=1&count=1800"
+  `${PREFIX_URL}/user.status?handle=` + username + "&from=1&count=1800"
 );
-var body2 = httpGet(`${prefixUrl}/user.info?handles=` + username);
+var body2 = httpGet(`${PREFIX_URL}/user.info?handles=` + username);
 
 body = JSON.parse(body);
 body2 = JSON.parse(body2);
